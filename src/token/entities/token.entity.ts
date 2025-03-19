@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  UpdateDateColumn,
-} from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm'
 import { TokenTx } from './token-tx.entity'
 
 export enum TokenUnit {
@@ -23,6 +17,7 @@ export class Token {
   @Column({
     type: 'enum',
     enum: TokenUnit,
+    enumName: 'token_unit_enum',
     unique: true,
   })
   unit: TokenUnit
