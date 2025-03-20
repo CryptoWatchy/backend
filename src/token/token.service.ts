@@ -10,7 +10,7 @@ export class TokenService {
     @InjectRepository(Token) private tokenRepository: Repository<Token>,
     @InjectRepository(TokenTx) private tokenTxRepository: Repository<TokenTx>,
   ) {
-    console.log('Hi!: ', TokenUnit)
+    console.log('Tokens: ', TokenUnit)
   }
 
   async getAllTokens() {
@@ -39,20 +39,33 @@ export class TokenService {
     unit: TokenUnit,
     createTokenTxDto: CreateTokenTxDto,
   ) {
-    const token = await this.tokenRepository.findOne({ where: { unit } })
-    if (!token) throw new Error('Token not found')
+    let token = await this.tokenRepository.findOne({ where: { unit } })
 
-    token.amount += createTokenTxDto.amount
-    token.value = token.amount * token.price
+    if (!token) {
+      token = this.tokenRepository.create({
+        unit,
+        favorite: false,
+        amount: 0,
+        price: 0,
+        value: 0,
+      })
+
+      token = await this.tokenRepository.save(token)
+    }
+
+    token.amount = Number(token.amount) + Number(createTokenTxDto.amount)
+    token.value = Number(token.amount) * Number(token.price)
+
     await this.tokenRepository.save(token)
 
     const tx = this.tokenTxRepository.create({
       token,
       tokenUnit: unit,
-      amount: createTokenTxDto.amount,
-      price: token.price,
+      amount: Number(createTokenTxDto.amount),
+      price: Number(token.price),
       comment: createTokenTxDto.comment,
     })
+
     await this.tokenTxRepository.save(tx)
 
     return { message: 'Transaction saved' }
@@ -68,6 +81,11 @@ export class TokenService {
   async getTotalValue() {
     const tokens = await this.tokenRepository.find()
 
-    return tokens.reduce((sum, token) => sum + token.value, 0)
+    const totalValue = tokens.reduce(
+      (sum, token) => sum + Number(token.value),
+      0,
+    )
+
+    return parseFloat(totalValue.toFixed(2))
   }
 }
