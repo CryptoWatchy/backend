@@ -17,7 +17,7 @@ import { ScheduleModule } from '@nestjs/schedule'
       password: process.env.PG_PASSWORD,
       database: process.env.PG_DB,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false,
+      synchronize: true,
       logging: true,
     }),
   ],
