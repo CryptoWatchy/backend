@@ -14,6 +14,13 @@ async function bootstrap() {
 
   const PORT = process.env.PORT_BACKEND || 3001
 
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true,
+  })
+
   /** @dev Allows us to use validation pipes in our app */
   /** @dev 'whitelist: true' gets rid of undefined elements in body and clears them */
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }))
