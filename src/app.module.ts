@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common'
 import { TokenModule } from './token/token.module'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { ScheduleModule } from '@nestjs/schedule'
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
     TokenModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
@@ -15,7 +17,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       password: process.env.PG_PASSWORD,
       database: process.env.PG_DB,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      synchronize: false,
       logging: true,
     }),
   ],
