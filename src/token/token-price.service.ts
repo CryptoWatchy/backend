@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Token, TokenUnit } from './entities'
@@ -15,7 +15,37 @@ export class TokenPriceService {
     private readonly httpService: HttpService,
   ) {}
 
-  @Cron('0 */10 * * * *')
+  async onModuleInit() {
+    // Seed initial token data if database is empty
+    const initialTokens: TokenUnit[] = [
+      TokenUnit.BITCOIN,
+      TokenUnit.ETHEREUM,
+      TokenUnit.POLYGON,
+      TokenUnit.POLKADOT,
+      TokenUnit.SOLANA,
+    ]
+
+    for (const unit of initialTokens) {
+      let token = await this.tokenRepository.findOne({
+        where: { unit },
+      })
+
+      if (!token) {
+        token = this.tokenRepository.create({
+          unit: unit as TokenUnit,
+          favorite: false,
+          amount: 0,
+          price: 0,
+          value: 0,
+        })
+
+        token = await this.tokenRepository.save(token)
+        this.logger.log(`Seeded new token: ${unit}`)
+      }
+    }
+  }
+
+  @Cron('0 */1 * * * *')
   async updateTokenPrices() {
     this.logger.log('Fetching token prices...')
 
@@ -44,9 +74,21 @@ export class TokenPriceService {
         // console.log(`Price for ${unit} (${coingeckoId}): `, price)
 
         if (price) {
-          const token = await this.tokenRepository.findOne({
+          let token = await this.tokenRepository.findOne({
             where: { unit: unit as TokenUnit },
           })
+
+          if (!token) {
+            token = this.tokenRepository.create({
+              unit: unit as TokenUnit,
+              favorite: false,
+              amount: 0,
+              price: 0,
+              value: 0,
+            })
+
+            token = await this.tokenRepository.save(token)
+          }
 
           if (!token) {
             this.logger.warn(`Token ${unit} not found in the database.`)
